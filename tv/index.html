@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self' https://fonts.gstatic.com;
+      script-src 'self' 'unsafe-inline' https://ajax.googleapis.com;
+      style-src 'self' 'unsafe-inline' https://ajax.googleapis.com;
+      connect-src 'self' https://*.cbsivideo.com https://otte-qw.live.pv-cdn.net https://ajax.googleapis.com;
+      img-src 'self' data: https://www.directvla.com;
+      media-src 'self' blob:;
+    ">
+    <title>DSPORTS</title>
+    <link rel="icon" type="image/png" href="https://www.directvla.com/favicon.ico">
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/shaka-player/5.1.8/controls.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/shaka-player/5.1.8/shaka-player.ui.js"></script>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      html, body {
+        width: 100%; height: 100%;
+        background: #000;
+        font-family: system-ui, -apple-system, sans-serif;
+        overflow: hidden;
+        color: #f0f0f8;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      #shaka-container {
+        width: 100vw; height: 100vh;
+        position: relative; background: #000;
+      }
+
+      #shaka-container video {
+        width: 100%; height: 100%;
+        object-fit: contain;
+      }
+
+      /* ── Shaka UI accent overrides ───────────────────────── */
+      .shaka-controls-container,
+      .shaka-controls-container * {
+        --shaka-highlight-color: #4f7cff;
+      }
+      .shaka-seek-bar.played,
+      .shaka-volume-bar.played {
+        color: #4f7cff !important;
+      }
+      .shaka-controls-button-panel button:focus,
+      .shaka-controls-button-panel button:hover {
+        background: rgba(79,124,255,0.25) !important;
+        border-radius: 4px;
+      }
+
+      /* ════════════════════════════════════════════════════════
+          LEFT CHANNEL SIDEBAR
+          ════════════════════════════════════════════════════════ */
+      #channel-sidebar {
+        position: absolute;
+        top: 0; left: 0; bottom: 120px;
+        z-index: 40;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-flex-direction: column;
+        flex-direction: column;
+        -webkit-justify-content: center;
+        justify-content: center;
+        padding: 36px 20px;
+        pointer-events: none;
+        opacity: 0;
+        -webkit-transition: opacity 0.3s;
+        transition: opacity 0.3s;
+      }
+
+      #channel-sidebar.visible { opacity: 1; }
+
+      .ch-btn {
+        display: -webkit-flex;
+        display: flex;
+        -webkit-align-items: center;
+        align-items: center;
+        /* gap fallback for Chromium 68 via margin on children */
+        padding: 26px 32px;
+        margin-bottom: 16px;
+        border-radius: 16px;
+        border: 2px solid rgba(255,255,255,0.1);
+        background: rgba(0,0,0,0.72);
+        color: rgba(255,255,255,0.6);
+        cursor: pointer;
+        outline: none;
+        -webkit-transition: all 0.2s;
+        transition: all 0.2s;
+        -webkit-tap-highlight-color: transparent;
+        white-space: nowrap;
+        min-width: 240px;
+        pointer-events: auto;
+      }
+      .ch-btn:last-child { margin-bottom: 0; }
+
+      .ch-btn:hover, .ch-btn:focus {
+        border-color: rgba(255,255,255,0.35);
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        -webkit-transform: translateX(4px);
+        transform: translateX(4px);
+      }
+      .ch-btn.active {
+        border-color: #4f7cff;
+        background: rgba(79,124,255,0.18);
+        color: #fff;
+        box-shadow: 0 0 24px rgba(79,124,255,0.35), inset 0 0 0 1px #4f7cff;
+        -webkit-transform: translateX(4px);
+        transform: translateX(4px);
+      }
+
+      .ch-dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        -webkit-flex-shrink: 0;
+        flex-shrink: 0;
+        background: rgba(255,255,255,0.18);
+        margin-right: 18px;
+      }
+      .ch-btn.active .ch-dot {
+        background: #4f7cff;
+        box-shadow: 0 0 6px #4f7cff;
+        -webkit-animation: livepulse 1.6s ease-in-out infinite;
+        animation: livepulse 1.6s ease-in-out infinite;
+      }
+      @-webkit-keyframes livepulse {
+        0%,100% { opacity: 1; -webkit-transform: scale(1); transform: scale(1); }
+        50%      { opacity: 0.5; -webkit-transform: scale(0.7); transform: scale(0.7); }
+      }
+      @keyframes livepulse {
+        0%,100% { opacity: 1; transform: scale(1); }
+        50%      { opacity: 0.5; transform: scale(0.7); }
+      }
+
+      .ch-name {
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="shaka-container">
+      <video id="video" playsinline></video>
+
+      <div id="channel-sidebar">
+        <button class="ch-btn active" data-idx="0" tabindex="0">
+          <span class="ch-dot"></span>
+          <span class="ch-name">DSPORTS</span>
+        </button>
+        <button class="ch-btn" data-idx="1" tabindex="0">
+          <span class="ch-dot"></span>
+          <span class="ch-name">DSPORTS 2</span>
+        </button>
+        <button class="ch-btn" data-idx="2" tabindex="0">
+          <span class="ch-dot"></span>
+          <span class="ch-name">DSPORTS +</span>
+        </button>
+      </div>
+    </div>
+    <script>
+      var CHANNELS = [
+        {
+          name:     'DSPORTS',
+          manifest: 'https://otte-qw.live.pv-cdn.net/pdx-nitro/live/clients/dash/enc/3gg2jnixjn/out/v1/e1840e01f3f14563b66bbb944d5cc54c/cenc.mpd',
+          keyId:    'f8b207c10f3f76aeba32a360ec52b9e4',
+          key:      'afad49d20eb39670e93e371c1d669921',
+        },
+        {
+          name:     'DSPORTS 2',
+          manifest: 'https://prope79d3g55.airspace-cdn.cbsivideo.com/out/v1/faa5cf8cb19e4de99417df05a463f9d5/manifest.mpd',
+          keyId:    '010b4fa338184f52a712121ad62ae9b4',
+          key:      'e310bad2a570b60f7799e2aa0fb33a71',
+        },
+        {
+          name:     'DSPORTS +',
+          manifest: 'https://prope9660ag6.airspace-cdn.cbsivideo.com/out/v1/a634dbd5b8474f38b38a8ce37dd77b50/manifest.mpd',
+          keyId:    '41121cea7a3d49a78c9496d1b0d919e4',
+          key:      'de048d4c2870b8d53961aaeac1804947',
+        },
+      ];
+
+      // ── State ─────────────────────────────────────────────────────────────────
+      var player    = null;
+      var ui        = null;
+      var activeIdx = 0;
+
+      var container = document.getElementById('shaka-container');
+      var video     = document.getElementById('video');
+      var sidebar   = document.getElementById('channel-sidebar');
+      var chBtns    = document.querySelectorAll('.ch-btn');
+
+      // ── Sidebar idle timer ────────────────────────────────────────────────────
+      var IDLE_MS   = 3000;
+      var idleTimer = null;
+
+      function showSidebar() {
+        sidebar.classList.add('visible');
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(hideSidebar, IDLE_MS);
+      }
+
+      function hideSidebar() {
+        if (!sidebar.contains(document.activeElement)) {
+          sidebar.classList.remove('visible');
+        }
+      }
+
+      // ── Util ──────────────────────────────────────────────────────────────────
+      function hexToBase64url(hex) {
+        hex = hex.replace(/\s/g, '');
+        var bytes = new Uint8Array(hex.length / 2);
+        for (var i = 0; i < bytes.length; i++) {
+          bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+        }
+        return btoa(String.fromCharCode.apply(null, bytes))
+          .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      }
+
+      // ── Cross-browser fullscreen ──────────────────────────────────────────────
+      function getFullscreenElement() {
+        return document.fullscreenElement || document.webkitFullscreenElement || null;
+      }
+      function requestFullscreen(el) {
+        if (el.requestFullscreen)       { el.requestFullscreen().catch(function(){}); }
+        else if (el.webkitRequestFullscreen) { el.webkitRequestFullscreen(); }
+      }
+      function exitFullscreen() {
+        if (document.exitFullscreen)         { document.exitFullscreen(); }
+        else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+      }
+
+      // ── Safe play ─────────────────────────────────────────────────────────────
+      function safePlay() {
+        var p = video.play();
+        if (p && p.catch) { p.catch(function() {}); }
+      }
+
+      // ── Load channel ──────────────────────────────────────────────────────────
+      function loadChannel(idx) {
+        if (!player) return;
+        var ch = CHANNELS[idx];
+        showSidebar();
+
+        var wasFullscreen = !!getFullscreenElement();
+        var clearKeys = {};
+        clearKeys[hexToBase64url(ch.keyId)] = hexToBase64url(ch.key);
+
+        player.unload().then(function() {
+          player.configure({ drm: { clearKeys: clearKeys } });
+          return player.load(ch.manifest);
+        }).then(function() {
+          safePlay();
+          if (wasFullscreen && !getFullscreenElement()) {
+            requestFullscreen(container);
+          }
+        }).catch(function(e) {
+          console.error('loadChannel error:', e);
+        });
+      }
+
+      // ── Init ──────────────────────────────────────────────────────────────────
+      function init() {
+        shaka.polyfill.installAll();
+
+        if (!shaka.Player.isBrowserSupported()) {
+          console.error('Browser does not support DASH/EME.');
+          return;
+        }
+
+        player = new shaka.Player();
+
+        player.attach(video).then(function() {
+
+          // Build Shaka UI manually (no data-shaka-player auto-init)
+          ui = new shaka.ui.Overlay(player, container, video);
+          ui.configure({
+            controlPanelElements: [
+              'play_pause',
+              'time_and_duration',
+              'mute',
+              'volume',
+              'spacer',
+              'overflow_menu',
+              'fullscreen',
+            ],
+            contextMenuElements: ['statistics'],
+            overflowMenuButtons: ['quality', 'statistics'],
+            statisticsList: [
+              'width', 'height', 'currentCodecs',
+              'estimatedBandwidth', 'streamBandwidth',
+              'liveLatency', 'bufferingTime', 'stallsDetected',
+            ],
+          });
+
+          player.addEventListener('error', function(e) {
+            console.error('Shaka error:', e.detail);
+          });
+
+          // ── Sidebar triggers ────────────────────────────────
+          // Standard pointer events (desktop / Magic Remote pointer mode)
+          container.addEventListener('mousemove',   showSidebar);
+          container.addEventListener('mouseenter',  showSidebar);
+          container.addEventListener('touchstart',  showSidebar);
+          container.addEventListener('click',       showSidebar);
+
+          // WebOS Magic Remote — fires when cursor appears/disappears
+          // This is the reliable trigger on LG TVs without pointer movement
+          window.addEventListener('cursorStateChange', function(e) {
+            if (e.detail && e.detail.visibility) {
+              // Cursor became visible (user wiggled the Magic Remote)
+              showSidebar();
+            }
+          });
+
+          // Sidebar focus management (D-pad / Tab navigation)
+          sidebar.addEventListener('focusin', function() {
+            clearTimeout(idleTimer);
+            sidebar.classList.add('visible');
+          });
+          sidebar.addEventListener('focusout', function() {
+            if (!sidebar.contains(document.activeElement)) {
+              idleTimer = setTimeout(hideSidebar, IDLE_MS);
+            }
+          });
+
+          // Show sidebar on boot, then load first channel
+          showSidebar();
+          loadChannel(activeIdx);
+
+        }).catch(function(e) {
+          console.error('attach error:', e);
+        });
+      }
+
+      // ── Channel buttons ───────────────────────────────────────────────────────
+      chBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var idx = parseInt(btn.getAttribute('data-idx'), 10);
+          chBtns.forEach(function(b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          btn.blur();
+          if (idx === activeIdx) return;
+          activeIdx = idx;
+          loadChannel(idx);
+        });
+      });
+
+      // ── Keyboard shortcuts ────────────────────────────────────────────────────
+      document.addEventListener('keydown', function(e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        var key = e.key;
+
+        if (key === 'm' || key === 'M') {
+          video.muted = !video.muted;
+
+        } else if (key === 'f' || key === 'F') {
+          if (!getFullscreenElement()) requestFullscreen(container);
+          else exitFullscreen();
+        }
+      });
+
+      // ── Boot ──────────────────────────────────────────────────────────────────
+      init();
+    </script>
+  </body>
+</html>
