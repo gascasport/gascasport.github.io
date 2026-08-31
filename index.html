@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Content-Security-Policy" content="
+            default-src 'self' https://fonts.gstatic.com;
+            script-src 'self' 'unsafe-inline' https://cdn.bitmovin.com;
+            style-src 'self' 'unsafe-inline' https://cdn.bitmovin.com;
+            connect-src 'self' data: https://*.cbsivideo.com https://otte-qw.live.pv-cdn.net https://cdn.bitmovin.com;
+            img-src 'self' data: https://www.directvla.com;
+            media-src 'self' blob: https://*.cbsivideo.com https://otte-qw.live.pv-cdn.net;
+        ">
+        <title>DSPORTS</title>
+
+        <link rel="icon" type="image/png" href="https://www.directvla.com/favicon.ico">
+        
+        <script src="https://cdn.bitmovin.com/player/web/8/bitmovinplayer.js"></script>
+
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #121212;
+                color: #ffffff;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                margin: 0;
+                padding: 20px;
+                max-width: 100%;
+                max-height: 80dvh;
+            }
+            h1 { margin-bottom: 20px; }
+            
+            .video-container {
+                width: min(100%, 1280px);
+                height: 80dvh;
+                border-radius: 0px;
+                overflow: visible;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+                background: #000;
+            }
+            #player {
+                width: 100%;
+                height: 100%;
+                background: #000;
+                overflow: hidden;
+            }
+            #player video {
+                display: block;
+                width: 100%;
+                height: 100%;
+                background: #000;
+            }
+            #player .bmpui-ui-button,
+            #player .bmpui-ui-controlbar,
+            #player .bmpui-ui-seekbar,
+            #player .bmpui-ui-hugeplaybacktogglebutton,
+            #player .bmpui-ui-settings-panel,
+            #player .bmpui-ui-selectbox {
+                background: transparent;
+                box-shadow: none;
+                border-color: transparent;
+            }
+            #player .bmpui-ui-settings-panel,
+            #player .bmpui-ui-settings-panel-content,
+            #player .bmpui-ui-settings-panel-item,
+            #player .bmpui-ui-selectbox,
+            #player .bmpui-ui-selectbox-list,
+            #player .bmpui-ui-selectbox-option {
+                background: rgba(0, 0, 0, 0.4);
+                color: #ffffff;
+            }
+            #player .bmpui-ui-button:hover,
+            #player .bmpui-ui-button:focus,
+            #player .bmpui-ui-settings-panel:hover,
+            #player .bmpui-ui-settings-panel:focus {
+                background: rgba(0, 0, 0, 0.4);
+            }
+            #player .bmpui-ui-icon,
+            #player .bmpui-ui-button svg,
+            #player .bmpui-ui-button path,
+            #player .bmpui-ui-button [fill] {
+                fill: #ffffff;
+                color: #ffffff;
+                opacity: 1;
+            }
+            #player .bmpui-seekbar-backdrop,
+            #player .bmpui-seekbar-bufferlevel,
+            #player .bmpui-seekbar-seekposition,
+            #player .bmpui-seekbar-playbackposition,
+            #player .bmpui-seekbar-playbackposition-marker {
+                background: rgba(255, 255, 255, 0.2);
+                border-color: rgba(255, 255, 255, 0.15);
+            }
+            #player .bmpui-seekbar-playbackposition,
+            #player .bmpui-seekbar-playbackposition-marker {
+                background: #ffffff;
+            }
+            .controls {
+                margin-top: 20px;
+                display: flex;
+                gap: 10px;
+            }
+            button {
+                background-color: #007bff;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                font-size: 16px;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+            button:hover { background-color: #0056b3; }
+            button.active {
+                background-color: #28a745;
+            }
+            #status {
+                margin-top: 15px;
+                font-size: 14px;
+                color: #aaaaaa;
+            }
+        </style>
+    </head>
+    <body>
+
+
+        <div class="video-container">
+            <div id="player"></div>
+        </div>
+
+        <div class="controls">
+            <button class="channel-btn active" data-id="dsports">DSPORTS</button>
+            <button class="channel-btn" data-id="dsports2">DSPORTS 2</button>
+            <button class="channel-btn" data-id="dsportsPlus">DSPORTS +</button>
+        </div>
+
+        <div id="status"></div>
+
+        <script>
+            const originalOpen = XMLHttpRequest.prototype.open;
+            XMLHttpRequest.prototype.open = function() {
+                if (typeof arguments[1] === 'string' && arguments[1].includes("licensing.bitmovin.com")) {
+                    arguments[1] = "data:text/plain;charset=utf-8;base64,eyJzdGF0dXMiOiJncmFudGVkIiwibWVzc2FnZSI6IlRoZXJlIHlvdSBnby4ifQ==";
+                }
+                return originalOpen.apply(this, arguments);
+            };
+            const channels = {
+                dsports: {
+                    name: "DSPORTS",
+                    dashManifest: "https://otte-qw.live.pv-cdn.net/pdx-nitro/live/clients/dash/enc/3gg2jnixjn/out/v1/e1840e01f3f14563b66bbb944d5cc54c/cenc.mpd",
+                    keyId: "f8b207c10f3f76aeba32a360ec52b9e4",
+                    key: "afad49d20eb39670e93e371c1d669921"
+                },
+                dsports2: {
+                    name: "DSPORTS 2",
+                    dashManifest: "https://prope79d3g55.airspace-cdn.cbsivideo.com/out/v1/faa5cf8cb19e4de99417df05a463f9d5/manifest.mpd",
+                    keyId: "010b4fa338184f52a712121ad62ae9b4",
+                    key: "e310bad2a570b60f7799e2aa0fb33a71"
+                },
+                dsportsPlus: {
+                    name: "DSPORTS +",
+                    dashManifest: "https://prope9660ag6.airspace-cdn.cbsivideo.com/out/v1/a634dbd5b8474f38b38a8ce37dd77b50/manifest.mpd",
+                    keyId: "41121cea7a3d49a78c9496d1b0d919e4",
+                    key: "de048d4c2870b8d53961aaeac1804947"
+                }
+            };
+
+            let player;
+            const statusDiv = document.getElementById('status');
+            const buttons = document.querySelectorAll('.channel-btn');
+
+            function setStatus(message) {
+                statusDiv.textContent = message;
+            }
+
+            function initPlayer() {
+                if (!window.bitmovin || !window.bitmovin.player || !window.bitmovin.player.Player) {
+                    setStatus('Error: Bitmovin Player no está disponible.');
+                    return;
+                }
+
+                const playerContainer = document.getElementById('player');
+                const playerConfig = {
+                    key: '11d3698c-efdf-42f1-8769-54663995de2b',
+                    playback: {
+                        autoplay: true,
+                        muted: false
+                    },
+                    style: {
+                        width: '100%',
+                        height: '100%'
+                    },
+                    live: {
+                        catchup: {
+                            playbackRateThreshold: 0.075,
+                            seekThreshold: 5,
+                            playbackRate: 1.2
+                        }
+                    },
+                    tweaks: {
+                        app_id: 'gascasport',
+                        file_protocol: true,
+                        BACKGROUND_ACTION_SUSPEND: false
+                    }
+                };
+
+                player = new bitmovin.player.Player(playerContainer, playerConfig);
+
+                buttons.forEach(btn => {
+                    btn.addEventListener('click', (event) => {
+                        buttons.forEach(button => button.classList.remove('active'));
+                        event.currentTarget.classList.add('active');
+                        loadChannel(event.currentTarget.dataset.id);
+                    });
+                });
+
+                loadChannel('dsports');
+            }
+
+            async function loadChannel(channelId) {
+                const channel = channels[channelId];
+                if (!channel || !player) {
+                    return;
+                }
+
+                const sourceConfig = {
+                    dash: channel.dashManifest,
+                    drm: {
+                        clearkey: [
+                            {
+                                keyId: channel.keyId,
+                                key: channel.key
+                            }
+                        ]
+                    }
+                };
+
+                try {
+                    await player.load(sourceConfig);
+                    setStatus('');
+                } catch (error) {
+                    console.error('Error de Bitmovin Player', error);
+                    setStatus(`Error: ${error && error.message ? error.message : 'No se pudo cargar la transmisión'}`);
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                initPlayer();
+            });
+        </script>
+    </body>
+</html>
