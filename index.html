@@ -15,9 +15,12 @@
 
         <link rel="icon" type="image/png" href="https://www.directvla.com/favicon.ico">
         
-        <script src="https://cdn.bitmovin.com/player/web/8/bitmovinplayer.js"></script>
+        <script defer src="https://cdn.bitmovin.com/player/web/8/bitmovinplayer.js"></script>
 
         <style>
+            html {
+                height: 100%;
+            }
             body {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 background-color: #121212;
@@ -28,13 +31,16 @@
                 margin: 0;
                 padding: 20px;
                 max-width: 100%;
-                max-height: 80dvh;
+                height: 100vh;
+                box-sizing: border-box;
+                overflow: hidden;
             }
             h1 { margin-bottom: 20px; }
             
             .video-container {
                 width: min(100%, 1280px);
-                height: 80dvh;
+                flex: 1 1 auto;
+                min-height: 0;
                 border-radius: 0px;
                 overflow: visible;
                 box-shadow: 0 4px 15px rgba(0,0,0,0.5);
@@ -101,6 +107,7 @@
                 margin-top: 20px;
                 display: flex;
                 gap: 10px;
+                flex: 0 0 auto;
             }
             button {
                 background-color: #007bff;
@@ -120,6 +127,7 @@
                 margin-top: 15px;
                 font-size: 14px;
                 color: #aaaaaa;
+                flex: 0 0 auto;
             }
         </style>
     </head>
@@ -245,8 +253,7 @@
                     setStatus(`Error: ${error && error.message ? error.message : 'No se pudo cargar la transmisión'}`);
                 }
             }
-
-            document.addEventListener('DOMContentLoaded', () => {
+            window.addEventListener('load', () => {
                 initPlayer();
             });
         </script>
