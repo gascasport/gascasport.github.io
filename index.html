@@ -200,8 +200,25 @@
                         width: '100%',
                         height: '100%'
                     },
-                    enableLowLatency: true,
-                    targetLatency: 5
+                    live: {
+                        lowLatency: {
+                            targetLatency: 18, 
+                            catchup: {
+                                seekThreshold: 10
+                            }
+                        }
+                    },
+                    buffer: {
+                        video: {
+                            forwardduration: 20
+                        },
+                        audio: {
+                            forwardduration: 20
+                        }
+                    },
+                    adaptation: {
+                        startupBitrate: '8.8mbps'
+                    }
                 };
 
                 player = new bitmovin.player.Player(playerContainer, playerConfig);
