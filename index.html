@@ -200,18 +200,8 @@
                         width: '100%',
                         height: '100%'
                     },
-                    live: {
-                        catchup: {
-                            playbackRateThreshold: 0.075,
-                            seekThreshold: 5,
-                            playbackRate: 1.2
-                        }
-                    },
-                    tweaks: {
-                        app_id: 'gascasport',
-                        file_protocol: true,
-                        BACKGROUND_ACTION_SUSPEND: false
-                    }
+                    enableLowLatency: true,
+                    targetLatency: 5
                 };
 
                 player = new bitmovin.player.Player(playerContainer, playerConfig);
