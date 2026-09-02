@@ -251,9 +251,27 @@
         var wasFullscreen = !!getFullscreenElement();
         var clearKeys = {};
         clearKeys[hexToBase64url(ch.keyId)] = hexToBase64url(ch.key);
+        var isShortSegments = (idx === 0);
+        var targetDelay = isShortSegments ? 10 : 18;
 
         player.unload().then(function() {
-          player.configure({ drm: { clearKeys: clearKeys } });
+          player.configure({
+            drm: { clearKeys: clearKeys },
+            manifest: {
+              dash: {
+                ignoreSuggestedPresentationDelay: true
+              },
+              defaultPresentationDelay: targetDelay
+            },
+            streaming: {
+              lowLatencyMode: true,
+              inaccurateManifestTolerance: 0,
+              segmentPrefetchLimit: 2,
+              bufferingGoal: isShortSegments ? 4 : 12,
+              rebufferingGoal: isShortSegments ? 1.5 : 5
+            }
+          });
+          
           return player.load(ch.manifest);
         }).then(function() {
           safePlay();
